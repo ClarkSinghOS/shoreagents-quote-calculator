@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShoreAgents Quote</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+    
+    /* LEFT PANEL - Controls */
+    .left-panel {
+      width: 340px;
+      background: #0f0f1a;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #222;
+    }
+    .logo { font-size: 18px; font-weight: bold; margin-bottom: 24px; color: #888; }
+    .logo span { color: #00ff88; }
+    
+    .control { margin-bottom: 20px; }
+    .control-label { font-size: 13px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .salary-display { font-size: 36px; font-weight: bold; color: #0038a8; margin-bottom: 4px; }
+    .tier-info { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .tier-badge { padding: 6px 14px; border-radius: 6px; font-size: 16px; font-weight: bold; }
+    .tier-junior { background: rgba(252,209,22,0.15); color: #fcd116; }
+    .tier-mid { background: rgba(0,204,255,0.15); color: #00ccff; }
+    .tier-senior { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+    
+    input[type="range"] {
+      width: 100%;
+      height: 10px;
+      border-radius: 5px;
+      background: #222;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0038a8;
+      cursor: pointer;
+    }
+    
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .btn {
+      padding: 12px 14px;
+      border: 2px solid #333;
+      background: transparent;
+      color: #888;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+      flex: 1;
+      text-align: center;
+    }
+    .btn:hover { border-color: #555; color: #fff; }
+    .btn.active { border-color: #00ff88; color: #00ff88; background: rgba(0,255,136,0.08); }
+    .btn-sm { padding: 10px 12px; font-size: 16px; min-width: 44px; flex: 0; }
+    
+    .spacer { flex: 1; }
+    
+    .copy-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    /* RIGHT PANEL - Output */
+    .right-panel {
+      flex: 1;
+      padding: 24px 32px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 20px;
+    }
+    
+    /* TOP - Quote Amount */
+    .quote-section {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+    }
+    .quote-main {
+      flex: 1;
+    }
+    .quote-label { font-size: 14px; color: #666; margin-bottom: 4px; text-transform: uppercase; }
+    .quote-amount { font-size: 64px; font-weight: bold; color: #00ff88; line-height: 1; }
+    .quote-usd { font-size: 18px; color: #888; margin-top: 4px; }
+    
+    .currency-boxes {
+      display: flex;
+      gap: 12px;
+    }
+    .curr-box {
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+      min-width: 90px;
+    }
+    .curr-box .flag { font-size: 20px; }
+    .curr-box .amt { font-size: 18px; font-weight: bold; margin: 4px 0; }
+    .curr-box .code { font-size: 11px; color: #666; }
+    
+    /* MIDDLE - Breakdown */
+    .breakdown-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    
+    .breakdown-visual {
+      display: flex;
+      flex-direction: column;
+    }
+    .bar-container {
+      height: 60px;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 12px;
+    }
+    .bar-seg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      flex-direction: column;
+    }
+    .bar-seg small { font-size: 10px; opacity: 0.8; }
+    .seg-salary { background: #0038a8; }
+    .seg-benefits { background: #ce1126; }
+    .seg-hmo { background: #fcd116; color: #000; }
+    .seg-staff { background: #fff; color: #000; }
+    .seg-infra { background: #00ff88; color: #000; }
+    
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: #888;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    
+    .money-flow {
+      background: #111;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .flow-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+    }
+    .flow-row:not(:last-child) { border-bottom: 1px solid #222; }
+    .flow-label { color: #888; font-size: 15px; }
+    .flow-value { font-weight: bold; font-size: 20px; }
+    .flow-value.blue { color: #0038a8; }
+    .flow-value.green { color: #00ff88; }
+    .flow-pct { font-size: 13px; color: #666; }
+    
+    /* BOTTOM - What SA Provides */
+    .provides-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr 200px;
+      gap: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #222;
+    }
+    .provide-box {
+      background: #0f0f1a;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .provide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #222;
+    }
+    .provide-title { font-size: 14px; font-weight: bold; }
+    .provide-title.white { color: #fff; }
+    .provide-title.green { color: #00ff88; }
+    .provide-amt { font-size: 18px; font-weight: bold; }
+    .provide-list { font-size: 13px; color: #888; line-height: 1.7; }
+    .provide-list .risk { color: #ff6b6b; font-weight: bold; }
+    
+    .margin-box {
+      background: linear-gradient(135deg, rgba(0,255,136,0.1) 0%, rgba(0,204,255,0.1) 100%);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .margin-value { font-size: 48px; font-weight: bold; color: #00ff88; }
+    .margin-label { font-size: 12px; color: #888; text-transform: uppercase; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <!-- LEFT - Controls -->
+  <div class="left-panel">
+    <div class="logo">Shore<span>Agents</span> Quote</div>
+    
+    <div class="control">
+      <div class="control-label">Base Salary (PHP)</div>
+      <div class="salary-display">₱<span id="salaryVal">30,000</span></div>
+      <input type="range" id="salarySlider" min="15000" max="200000" step="1000" value="30000">
+      <div class="tier-info">
+        <span id="tierBadge" class="tier-badge tier-junior">Junior ×1.7</span>
+        <span style="color:#555;font-size:12px">₱15K – ₱200K</span>
+      </div>
+    </div>
+    
+    <div class="control">
+      <div class="control-label">Workspace</div>
+      <div class="btn-row">
+        <button class="btn active" data-ws="wfh">🏠 WFH<br><small>$150</small></button>
+        <button class="btn" data-ws="hybrid">🏢 Hybrid<br><small>$220</small></button>
+        <button class="btn" data-ws="office">🏛️ Office<br><small>$290</small></button>
+      </div>
+    </div>
+    
+    <div class="control">
+      <div class="control-label">HMO Coverage</div>
+      <div class="btn-row">
+        <button class="btn" data-hmo="no">None</button>
+        <button class="btn active" data-hmo="yes">+ HMO ₱2,900</button>
+      </div>
+    </div>
+    
+    <div class="control">
+      <div class="control-label">Display Currency</div>
+      <div class="btn-row">
+        <button class="btn btn-sm active" data-curr="PHP">🇵🇭</button>
+        <button class="btn btn-sm" data-curr="USD">🇺🇸</button>
+        <button class="btn btn-sm" data-curr="AUD">🇦🇺</button>
+        <button class="btn btn-sm" data-curr="NZD">🇳🇿</button>
+        <button class="btn btn-sm" data-curr="GBP">🇬🇧</button>
+        <button class="btn btn-sm" data-curr="EUR">🇪🇺</button>
+      </div>
+    </div>
+    
+    <div class="spacer"></div>
+    
+    <button class="copy-btn" onclick="copyQuote()">📋 Copy Quote</button>
+  </div>
+  
+  <!-- RIGHT - Output -->
+  <div class="right-panel">
+    <!-- TOP: Quote -->
+    <div class="quote-section">
+      <div class="quote-main">
+        <div class="quote-label">Client Pays Monthly</div>
+        <div class="quote-amount"><span id="sym">₱</span><span id="totalAmt">76,040</span></div>
+        <div class="quote-usd">≈ $<span id="usdAmt">1,308</span> USD</div>
+      </div>
+      <div class="currency-boxes">
+        <div class="curr-box"><div class="flag">🇵🇭</div><div class="amt" id="phpBox">₱76,040</div><div class="code">PHP</div></div>
+        <div class="curr-box"><div class="flag">🇺🇸</div><div class="amt" id="usdBox">$1,308</div><div class="code">USD</div></div>
+        <div class="curr-box"><div class="flag">🇦🇺</div><div class="amt" id="audBox">A$1,837</div><div class="code">AUD</div></div>
+        <div class="curr-box"><div class="flag">🇬🇧</div><div class="amt" id="gbpBox">£960</div><div class="code">GBP</div></div>
+      </div>
+    </div>
+    
+    <!-- MIDDLE: Breakdown -->
+    <div class="breakdown-section">
+      <div class="breakdown-visual">
+        <div class="bar-container">
+          <div class="bar-seg seg-salary" id="bSal" style="width:39%">39%<small>Salary</small></div>
+          <div class="bar-seg seg-benefits" id="bBen" style="width:9%">9%<small>Benefits</small></div>
+          <div class="bar-seg seg-hmo" id="bHmo" style="width:4%">4%<small>HMO</small></div>
+          <div class="bar-seg seg-staff" id="bStaff" style="width:29%">29%<small>SA Staff</small></div>
+          <div class="bar-seg seg-infra" id="bInfra" style="width:19%">19%<small>SA Infra</small></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#0038a8"></div>Salary</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ce1126"></div>Benefits</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fcd116"></div>HMO</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fff"></div>SA Staff</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#00ff88"></div>SA Infra</div>
+        </div>
+      </div>
+      
+      <div class="money-flow">
+        <div class="flow-row">
+          <span class="flow-label">Client Pays</span>
+          <span class="flow-value" id="fTotal">₱76,040</span>
+        </div>
+        <div class="flow-row">
+          <span class="flow-label">Employee Cost</span>
+          <span class="flow-value blue" id="fEmp">₱39,409</span>
+        </div>
+        <div class="flow-row">
+          <div>
+            <span class="flow-label">ShoreAgents Gets</span>
+            <div class="flow-pct"><span id="fPct">48</span>% of payment</div>
+          </div>
+          <span class="flow-value green" id="fSa">₱36,631</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- BOTTOM: What SA Provides -->
+    <div class="provides-section">
+      <div class="provide-box">
+        <div class="provide-header">
+          <span class="provide-title white">⚪ SA Staff (60%)</span>
+          <span class="provide-amt" id="pStaff">₱21,978</span>
+        </div>
+        <div class="provide-list">
+          • Recruitment & vetting<br>
+          • Payroll processing<br>
+          • HR & compliance<br>
+          • Account management<br>
+          • IT support personnel
+        </div>
+      </div>
+      
+      <div class="provide-box">
+        <div class="provide-header">
+          <span class="provide-title green">🟢 SA Infrastructure (40%)</span>
+          <span class="provide-amt" id="pInfra" style="color:#00ff88">₱14,652</span>
+        </div>
+        <div class="provide-list">
+          • Systems & software<br>
+          • Equipment provision<br>
+          • Office overhead<br>
+          • <span class="risk">Payment risk buffer</span><br>
+          • Profit margin
+        </div>
+      </div>
+      
+      <div class="margin-box">
+        <div class="margin-value"><span id="marginVal">48</span>%</div>
+        <div class="margin-label">Gross Margin</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PHP_USD = 58.10;
+    const RATES = { PHP: 58.10, USD: 1, AUD: 1.40, NZD: 1.65, GBP: 0.73, CAD: 1.36, EUR: 0.84 };
+    const SYMS = { PHP: '₱', USD: '$', AUD: 'A$', NZD: 'NZ$', GBP: '£', CAD: 'C$', EUR: '€' };
+    const WS = { wfh: 150, hybrid: 220, office: 290 };
+    const HMO = 2900;
+    
+    let state = { salary: 30000, ws: 'wfh', hmo: true, curr: 'PHP' };
+    
+    const tier = s => s < 40000 ? { m: 1.7, n: 'Junior', c: 'junior' } : s <= 100000 ? { m: 1.5, n: 'Mid', c: 'mid' } : { m: 1.4, n: 'Senior', c: 'senior' };
+    const ben = s => Math.round(Math.min(s,35000)*0.102 + Math.min(s,100000)*0.025 + Math.min(s,10000)*0.02 + s*0.0833);
+    const fmt = (php, c) => { const v = c==='PHP' ? php : (php/PHP_USD)*RATES[c]; return SYMS[c] + Math.round(v).toLocaleString(); };
+    
+    function calc() {
+      const s = state.salary, t = tier(s), b = ben(s), h = state.hmo ? HMO : 0, w = WS[state.ws] * PHP_USD;
+      const cost = s + b + h, rate = cost * t.m, total = rate + w, sa = total - cost;
+      const saStaff = sa * 0.6, saInfra = sa * 0.4, margin = (sa/total)*100;
+      const c = state.curr;
+      
+      // Controls
+      document.getElementById('salaryVal').textContent = s.toLocaleString();
+      document.getElementById('tierBadge').textContent = `${t.n} ×${t.m}`;
+      document.getElementById('tierBadge').className = `tier-badge tier-${t.c}`;
+      
+      // Quote
+      document.getElementById('sym').textContent = SYMS[c];
+      document.getElementById('totalAmt').textContent = fmt(total,c).replace(SYMS[c],'');
+      document.getElementById('usdAmt').textContent = Math.round(total/PHP_USD).toLocaleString();
+      
+      // Currency boxes
+      document.getElementById('phpBox').textContent = fmt(total,'PHP');
+      document.getElementById('usdBox').textContent = fmt(total,'USD');
+      document.getElementById('audBox').textContent = fmt(total,'AUD');
+      document.getElementById('gbpBox').textContent = fmt(total,'GBP');
+      
+      // Bar
+      const pS = (s/total)*100, pB = (b/total)*100, pH = (h/total)*100, pSt = (saStaff/total)*100, pI = (saInfra/total)*100;
+      document.getElementById('bSal').style.width = pS+'%'; document.getElementById('bSal').innerHTML = Math.round(pS)+'%<small>Salary</small>';
+      document.getElementById('bBen').style.width = pB+'%'; document.getElementById('bBen').innerHTML = Math.round(pB)+'%<small>Benefits</small>';
+      document.getElementById('bHmo').style.width = pH+'%'; document.getElementById('bHmo').innerHTML = h ? Math.round(pH)+'%<small>HMO</small>' : '';
+      document.getElementById('bStaff').style.width = pSt+'%'; document.getElementById('bStaff').innerHTML = Math.round(pSt)+'%<small>SA Staff</small>';
+      document.getElementById('bInfra').style.width = pI+'%'; document.getElementById('bInfra').innerHTML = Math.round(pI)+'%<small>SA Infra</small>';
+      
+      // Money flow
+      document.getElementById('fTotal').textContent = fmt(total,c);
+      document.getElementById('fEmp').textContent = fmt(cost,c);
+      document.getElementById('fSa').textContent = fmt(sa,c);
+      document.getElementById('fPct').textContent = Math.round(margin);
+      
+      // Provides
+      document.getElementById('pStaff').textContent = fmt(saStaff,c);
+      document.getElementById('pInfra').textContent = fmt(saInfra,c);
+      document.getElementById('marginVal').textContent = Math.round(margin);
+    }
+    
+    function copyQuote() {
+      const s = state.salary, t = tier(s), b = ben(s), h = state.hmo ? HMO : 0, w = WS[state.ws] * PHP_USD;
+      const total = (s + b + h) * t.m + w, usd = Math.round(total/PHP_USD);
+      navigator.clipboard.writeText(`ShoreAgents Quote\n━━━━━━━━━━━━━━━\nSalary: ₱${s.toLocaleString()}\nWorkspace: ${state.ws.toUpperCase()}\nHMO: ${state.hmo?'Yes':'No'}\n━━━━━━━━━━━━━━━\nMonthly: $${usd.toLocaleString()} USD\n         ₱${Math.round(total).toLocaleString()} PHP`);
+      alert('Quote copied!');
+    }
+    
+    document.getElementById('salarySlider').oninput = e => { state.salary = +e.target.value; calc(); };
+    document.querySelectorAll('[data-ws]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-ws]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); state.ws = b.dataset.ws; calc(); });
+    document.querySelectorAll('[data-hmo]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-hmo]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); state.hmo = b.dataset.hmo==='yes'; calc(); });
+    document.querySelectorAll('[data-curr]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-curr]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); state.curr = b.dataset.curr; calc(); });
+    
+    calc();
+  </script>
+</body>
+</html>
